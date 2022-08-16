@@ -1,0 +1,150 @@
+---
+title: "fitbitr demo"
+author: "Jessica Hoehner"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+Sources: 
+https://mrkaye97.github.io/fitbitr/index.html
+https://hydroecology.net/getting-detailed-fitbit-data-with-r/
+https://health.gov/sites/default/files/2019-10/PAG_ExecutiveSummary.pdf
+
+```{r setup, include=FALSE}
+pacman::p_load("fitbitr", "tidyverse", "ggplot2", "keyring", 
+               "viridis", "lubridate", "here", "forcats", 
+               "fitbitViz")
+
+remotes::install_github('mlampros/fitbitViz')
+
+token <- generate_token(
+  client_id = key_get("client_id"),
+  client_secret = key_get("client_secret"),
+  callback = key_get("callback")
+)
+
+output <- here("fitviz/output")
+
+# todo: add annotation for JSM 2022
+# 
+
+figure_aesthetics <- function(ggobj){
+  
+  (ggobj +
+  geom_line() +
+  theme_classic() + # change to SI theme
+  geom_point(
+    data = subset(total_activity %>%
+         filter(intensity %in% c("fairly_active")), 
+         sum >= 150),
+    size = 3, 
+    color = "#f0f921") +
+   geom_point(
+    data = subset(total_activity %>%
+         filter(intensity %in% c("very_active"),
+                sum >= 75  | sum >= 150)),
+    size = 3, 
+    color = "#f89540") +
+  scale_color_manual(values = c("#f0f921", "#f89540")) +
+  scale_y_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300),
+                     limits = c(0, 300)) +
+  labs(
+    color = NULL,
+    legend = NULL))
+  
+}
+
+```
+
+## How often am I meeting the CDC's reccomended goals for adult physical activity?
+
+Guideline #1 150-300 minutes/week moderate activity
+Guideline #2 75-150 minutes/week vigorous activity
+
+First, I pull in the minutes I have been "fairly" and "very" active over the
+last several weeks. "Fairly" and "Very" correspond with moderate and vigorous 
+activity respectively. Next, I pivot the data to create a column with 
+"activity level" and summarize the daily data by week.
+
+```{r activity1}
+
+start_date <- as_date("2022-07-17")
+end_date <- as_date("2022-08-15")
+
+fair <- minutes_fairly_active(start_date, end_date)
+very <- minutes_very_active(start_date, end_date)
+
+total_activity <- fair %>%
+  left_join(very, by = "date") %>%
+  mutate(
+    across(.cols = (starts_with("minutes")), 
+           ~ as.numeric(.)), 
+    week = floor_date(date, unit = "week")) %>%
+  # filtering out because I didn't wear it
+  filter(!week == "2022-08-14") %>%
+   pivot_longer(., 
+                starts_with("minutes"), 
+                            names_to = "intensity", 
+                            values_to = "minutes") %>%
+  group_by(week, intensity) %>%
+   mutate(
+     intensity = stringr::str_remove(intensity, "minutes_"),
+     sum = sum(minutes), 
+     mean = mean(minutes),
+     median = median(minutes))
+ 
+```
+
+## Activity Plot 1
+
+I have met the CDC's recommended goals for moderate physical activity one week out
+of the previous 4 and met the recommended goals for vigorous activity 3 out of the 
+previous 4 weeks. Wow! Seems like I'm pretty active huh?
+
+```{r activity_plot, echo=FALSE}
+
+sum_activity <- ggplot(total_activity, 
+                        aes(x = week, 
+                            y = sum, color = intensity))
+
+figure_aesthetics(sum_activity)
+
+# todo: add annotation for JSM 2022
+# 
+
+```
+
+From the figure above you would think I am an extremely active person but what 
+does the mean activity level for each week look like?
+
+```{r mean_activity, echo=FALSE}
+
+mean_activity <- ggplot(total_activity, 
+                        aes(x = week, 
+                            y = mean, color = intensity))
+
+figure_aesthetics(mean_activity)
+# fix this, none should have points
+
+```
+
+This makes sense, on most weeks I am fairly active for about 20 minutes each week
+and very active for between 0-30 minutes each week. I started commuting into an 
+office once a week beginning July 25th and attended a professional conference 
+the week of August 8th so it makes sense that these weeks would start the upward
+trend and see an increase in vigorous activity especially as I walk briskly to
+catch my train or make it from one talk to another. 
+
+Though, since I only commute once a week, I bet these weekly means are being driven
+up by that one day. Let's look at the median and see: 
+
+```{r median_activity, echo=FALSE}
+
+median_activity <- ggplot(total_activity, 
+       aes(x = week, 
+           y = median, color = intensity)) 
+
+figure_aesthetics(median_activity)
+# fix this, none should have points
+
+```
