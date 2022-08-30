@@ -27,9 +27,9 @@ output <- here("fitviz/output")
 
 ## How often am I meeting the CDC's reccomended guidelines for adult physical activity?
 
-1. 150-300 minutes a week of moderate-intensity activity OR
-2. 75-150 minutes a week of vigorous-intensity activity OR
-3. 75-150 minutes of moderate-intensity + vigorous-intensity activity 
+1. 150-300 minutes per week of moderate intensity activity OR
+2. 75-150 minutes per week of vigorous intensity activity OR
+3. 75-150 minutes per week of moderate intensity + vigorous intensity activity 
 
 First, I pull in the minutes I have been "fairly" and "very" active over the
 last several weeks. "Fairly" and "Very" correspond with moderate and vigorous 
@@ -114,8 +114,8 @@ si_save("overall_activity.png")
 
 ```
 Looking at the sum of all active minutes overall, I seem like a very active person.
-I have been meeting the minimum goal of 75 minutes of moderate + vigorous activity 
-per week and even exceeded the maximum goal of 150 minutes twice over the last five weeks.
+I met the minimum goal of 75 minutes of moderate + vigorous activity per week 
+each week and even exceeded the maximum goal of 150 minutes twice over the last five weeks.
 
 I imagine I was especially active the first week documented because
 I was excited to start wearing my Fitbit again and for the other week I exceeded
@@ -161,7 +161,7 @@ ggplot(total_activity %>%
         plot.title = element_markdown(), 
         plot.subtitle = element_markdown())
 
-si_save("activity_by_intentsity.png")
+si_save("activity_by_intensity.png")
 
 ```
 
