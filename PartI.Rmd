@@ -38,8 +38,8 @@ activity respectively. Next, I pivot the data to create a column with
 
 ```{r activity1}
 
-start_date <- as_date("2022-07-17")
-end_date <- as_date("2022-08-24")
+start_date <- as_date("2022-08-02")
+end_date <- as_date("2022-09-02")
 
 fair <- minutes_fairly_active(start_date, end_date)
 very <- minutes_very_active(start_date, end_date)
@@ -54,7 +54,6 @@ total_activity <- fair %>%
                 starts_with("minutes"), 
                             names_to = "intensity", 
                             values_to = "minutes") %>%
-  filter(minutes != 0) %>%
   select(-date) %>%
   group_by(week) %>%
   mutate(sum_combo = sum(minutes)) %>%
@@ -75,11 +74,11 @@ total_activity <- fair %>%
 
 ggplot(total_activity %>%
          mutate(
-         goal = as.numeric(75))) +
+         goal = as.numeric(150))) +
   si_style() +
   geom_col(aes(x = week, y = sum_combo, fill = moody_blue), 
            position = "dodge") +
-    geom_col(aes(x = week, y = goal, fill = moody_blue, alpha = 0.8), 
+    geom_col(aes(x = week, y = goal, fill = moody_blue), alpha = 0.3,
            position = "dodge") +
   scale_y_continuous(breaks = c(0, 25, 50, 75, 100, 125, 175, 
                                 150, 175, 200, 225, 250, 
@@ -88,39 +87,36 @@ ggplot(total_activity %>%
   scale_fill_manual(values = c(moody_blue, moody_blue)) +
   labs(
     x = NULL, 
-    y = "Minutes",
+    y = NULL,
     fill = NULL,
     legend = NULL, 
     alpha = NULL, 
-    caption = "J. Hoehner",
-    title = glue("<i style='color:{usaid_black};'>MINIMUM RECOMMENDATIONS MET 
-                 EACH WEEK, EXCEEDED SOME WEEKS</i>"), 
-    subtitle = glue("<i style='color:{usaid_darkgrey};'>Over the last five weeks 
-    there have been two weeks in which I have</i> <br> 
-    <i style='color:{usaid_darkgrey};'>exceeded the maximum recommended number 
-    of active minutes per week by 1.7-2x</i>")) +
+    caption = "Source: Fitbit API, my data",
+    # title = glue("<i style='color:{usaid_black};'>Minimum Goals Exceeded Each Week Device Was Worn,<br> Maximum Goals Exceeded Twice</i>") %>% toupper, 
+    subtitle = glue("<i style='color:{usaid_darkgrey};'>I exceeded the <i style='color:{moody_blue};'>150 minute goal</i> <i style='color:{usaid_darkgrey};'>twice over the last five weeks</i>")) +
   theme(legend.position = "none", 
         text = element_text(family = "Source Sans Pro"),
         plot.title = element_markdown(), 
         plot.subtitle = element_markdown()) +
   annotate("text", 
            x = as_date("2022-08-07"), y = 275, 
-           label = "1.7x max. goal") +
+           label = "1.7x max. goal", 
+           color = usaid_darkgrey) +
   annotate("text", 
-           x = as_date("2022-07-17"), y = 325, 
-           label = "2x max. goal")
+           x = as_date("2022-08-28"), y = 350, 
+           label = "2.2x max. goal", 
+           color = usaid_darkgrey)
 
 si_save("overall_activity.png")
 
 ```
 Looking at the sum of all active minutes overall, I seem like a very active person.
 I met the minimum goal of 75 minutes of moderate + vigorous activity per week 
-each week and even exceeded the maximum goal of 150 minutes twice over the last five weeks.
+each week (except for the week I did not wear my device, Aug 22) and even exceeded 
+the maximum goal of 150 minutes twice over the last five weeks.
 
-I imagine I was especially active the first week documented because
-I was excited to start wearing my Fitbit again and for the other week I exceeded
-the goal (Aug 08), I was attending a professional conference that had me 
-commuting daily and running from room to room for most of each day that week. 
+For the first week I exceeded the maximum goal (Aug 08), I was attending a professional conference that had me commuting daily and running from room to room for most of each day that week. During the week of August 29th, I have started running more regularly
+again and ran about 6.5 miles that week.
 
 Let's look at activity by intensity to see how I am doing with regard to moderate
 vs. vigorous activity.
@@ -134,8 +130,8 @@ ggplot(total_activity %>%
   si_style() +
   geom_col(aes(x = week, y = sum, fill = intensity, group = intensity), 
            position = "dodge") +
-  geom_col(aes(x = week, y = goal, alpha = 0.05, 
-               fill = intensity, group = intensity), 
+  geom_col(aes(x = week, y = goal, 
+               fill = intensity, group = intensity), alpha = 0.3,
            position = "dodge") +
   scale_fill_manual(values = c(golden_sand,burnt_sienna),
                     labels = NULL) +
@@ -145,17 +141,17 @@ ggplot(total_activity %>%
                      limits = c(0,400)) +
   labs(
     x = NULL, 
-    y = "Minutes",
+    y = NULL,
     fill = NULL,
     legend = NULL, 
     alpha = NULL, 
-    caption = "J. Hoehner",
+    caption = "Source: Fitbit API, my data",
     title =  glue("<i style='color:{usaid_black};'>A 60 MPH COUCH POTATO</i>"), 
     subtitle = glue("<i style='color:{usaid_darkgrey};'>
     While I have met the minimum goal for</i> <i style='color:{burnt_sienna};'>vigorous actvity</i> <i style='color:{usaid_darkgrey};'>most weeks,</i> <br> 
     <i style='color:{usaid_darkgrey};'>I have only met the minimum goal for</i> 
     <i style='color:{golden_sand};'>moderate activity</i>
-    <i style='color:{usaid_darkgrey};'>once in the previous five weeks</i>")) +
+    <i style='color:{usaid_darkgrey};'>once in the last five weeks</i>")) +
   theme(legend.position = "none", 
         text = element_text(family = "Source Sans Pro"),
         plot.title = element_markdown(), 
@@ -165,10 +161,9 @@ si_save("activity_by_intensity.png")
 
 ```
 
-Over the previous five weeks I have met the minimum goal for vigorous activity (75 minutes) 
-most weeks and even exceeded the maximum goal of 150 minutes (by one minute!) while at the conference. 
-Week to week I appear to struggle with meeting the minimum goal of 150 minutes of moderate 
-activity and the only met this goal the first week I wore the Fitbit.
+Over the last five weeks I have met the minimum goal for vigorous activity (75 minutes)
+most weeks and even exceeded the maximum goal of 150 minutes (by one minute!) while at the conference. Week to week I appear to struggle with meeting the minimum goal of 150 minutes of moderate activity and the only met this goal the week I started running 
+regularly again (Aug 29)
 
 Looking at how inconsistently I am moderately active, this suggests to me 
 that most of every day in a given week I am fairly sedentary but that there
